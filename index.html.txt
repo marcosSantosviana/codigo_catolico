@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquivos Católicos</title>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  background: linear-gradient(#00ffff, #ffffff);
+  text-align: center;
+  overflow-x: hidden;
+}
+
+header {
+  background: #00e5ff;
+  padding: 15px;
+  font-family: Garamond;
+}
+
+h1 {
+  font-size: 55px;
+  margin: 0;
+}
+
+.container {
+  max-width: 600px;
+  margin: 20px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+button {
+  background: #00bcd4;
+  color: white;
+  border: none;
+  padding: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.grupo {
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.titulo {
+  background: #00bcd4;
+  color: white;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.lista {
+  display: none;
+  padding: 10px;
+}
+
+/* FIGURINHAS CAINDO */
+.figurinha {
+  position: fixed;
+  top: -50px;
+  animation: cair linear infinite;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+@keyframes cair {
+  to {
+    transform: translateY(110vh);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>📖 Arquivos Católicos</h1>
+<p>✨ Tudo para a glória de Deus ✨</p>
+</header>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="login">
+<p>🔒 Área do Criador</p>
+<input type="password" id="senha" placeholder="Senha">
+<br>
+<button onclick="login()">Entrar</button>
+</div>
+
+<!-- UPLOAD -->
+<div id="upload" style="display:none;">
+<input type="file" id="file" multiple>
+<br>
+
+<select id="grupoSelect">
+<option value="">Escolha o grupo</option>
+</select>
+
+<br>
+<button onclick="add()">Adicionar</button>
+
+<h3>Criar Grupo</h3>
+<input type="text" id="novoGrupo" placeholder="Nome do grupo">
+<br>
+<button onclick="criarGrupo()">Criar</button>
+</div>
+
+<!-- GRUPOS -->
+<div id="grupos">
+  <div class="grupo">
+    <div class="titulo" onclick="toggle('lista_oracoes')">🙏 Orações</div>
+    <ul class="lista" id="lista_oracoes"></ul>
+  </div>
+</div>
+
+</div>
+
+<script>
+
+function login() {
+  if (document.getElementById('senha').value === "1234") {
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('upload').style.display = 'block';
+  } else {
+    alert('Senha errada');
+  }
+}
+
+function toggle(id) {
+  const l = document.getElementById(id);
+  l.style.display = l.style.display === 'block' ? 'none' : 'block';
+}
+
+function add() {
+  const files = document.getElementById('file').files;
+  const grupoId = document.getElementById('grupoSelect').value;
+
+  if (!grupoId) {
+    alert("⚠️ Escolha um grupo antes!");
+    return;
+  }
+
+  const lista = document.getElementById(grupoId);
+
+  for (let i = 0; i < files.length; i++) {
+    const li = document.createElement('li');
+    const link = document.createElement('a');
+
+    link.textContent = files[i].name;
+    link.href = URL.createObjectURL(files[i]);
+    link.target = '_blank';
+
+    li.appendChild(link);
+    lista.appendChild(li);
+  }
+}
+
+function atualizarSelect() {
+  const select = document.getElementById('grupoSelect');
+  select.innerHTML = '<option value="">Escolha o grupo</option>';
+
+  const listas = document.querySelectorAll('.lista');
+  listas.forEach(l => {
+    const option = document.createElement('option');
+    option.value = l.id;
+    option.textContent = l.id.replace("lista_", "");
+    select.appendChild(option);
+  });
+}
+
+function criarGrupo() {
+  const nome = document.getElementById('novoGrupo').value;
+  if (!nome) {
+    alert("Digite um nome!");
+    return;
+  }
+
+  const id = "lista_" + nome.toLowerCase().replace(/\s+/g, '_');
+
+  if (document.getElementById(id)) {
+    alert("Grupo já existe!");
+    return;
+  }
+
+  const container = document.getElementById('grupos');
+
+  const div = document.createElement('div');
+  div.className = 'grupo';
+
+  const titulo = document.createElement('div');
+  titulo.className = 'titulo';
+  titulo.textContent = "🙏 " + nome;
+  titulo.onclick = () => toggle(id);
+
+  const ul = document.createElement('ul');
+  ul.className = 'lista';
+  ul.id = id;
+
+  div.appendChild(titulo);
+  div.appendChild(ul);
+
+  container.appendChild(div);
+
+  document.getElementById('novoGrupo').value = '';
+  atualizarSelect();
+}
+
+/* FIGURINHAS CAINDO (FUNCIONA SEM INTERNET) */
+function criarFigurinha() {
+  const span = document.createElement("span");
+  span.innerHTML = "🙏";
+
+  span.className = "figurinha";
+  span.style.left = Math.random() * 100 + "vw";
+  span.style.fontSize = (20 + Math.random() * 25) + "px";
+  span.style.animationDuration = (4 + Math.random() * 4) + "s";
+
+  document.body.appendChild(span);
+
+  setTimeout(() => {
+    span.remove();
+  }, 8000);
+}
+
+setInterval(criarFigurinha, 400);
+
+// iniciar
+atualizarSelect();
+
+</script>
+
+</body>
+</html>
