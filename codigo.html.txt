@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquivos Católicos</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #f0f2f5;
+}
+
+header {
+  background: #00bcd4;
+  color: white;
+  padding: 15px;
+  font-size: 24px;
+  text-align: center;
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 15px;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #00bcd4;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0097a7;
+}
+
+.grupo {
+  margin-top: 10px;
+}
+
+.titulo {
+  background: #00bcd4;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lista {
+  display: none;
+  margin-top: 5px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 5px;
+}
+
+.item a {
+  text-decoration: none;
+  color: black;
+}
+
+.del-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: none;
+  background: #ff3b3b;
+  color: white;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>📖 Arquivos Católicos</header>
+
+<div class="container">
+
+<div id="login" class="card">
+  <h3>🔒 Área do Criador</h3>
+  <input type="password" id="senha" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
+</div>
+
+<div id="painel" style="display:none;">
+
+<div class="card">
+  <input type="file" id="file" multiple>
+  <select id="grupoSelect"></select>
+  <button onclick="add()">Adicionar Arquivo</button>
+</div>
+
+<div class="card">
+  <input type="text" id="novoGrupo" placeholder="Novo grupo">
+  <button onclick="criarGrupo()">Criar Grupo</button>
+</div>
+
+<div class="card">
+  <input type="text" id="busca" placeholder="Buscar arquivo..." onkeyup="buscar()">
+</div>
+
+</div>
+
+<div id="grupos"></div>
+
+</div>
+
+<script>
+
+let adminLogado = false;
+
+let dados = JSON.parse(localStorage.getItem("dados")) || {
+  "Orações": []
+};
+
+/* LOGIN */
+function login() {
+  if (btoa(document.getElementById('senha').value) === "MTIzNA==") {
+    adminLogado = true;
+    document.getElementById("login").style.display = "none";
+    document.getElementById("painel").style.display = "block";
+    atualizar();
+  } else {
+    alert("Senha incorreta!");
+  }
+}
+
+/* TOGGLE */
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+/* ATUALIZAR */
+function atualizar() {
+  const area = document.getElementById("grupos");
+  const select = document.getElementById("grupoSelect");
+
+  area.innerHTML = "";
+  select.innerHTML = "";
+
+  for (let grupo in dados) {
+
+    const idSeguro = grupo.replace(/\s/g, "_");
+
+    select.innerHTML += `<option value="${grupo}">${grupo}</option>`;
+
+    const arquivos = dados[grupo]
+      .map((arq, i) => `
+        <div class="item">
+          <a href="${arq.url}" target="_blank">📄 ${arq.nome}</a>
+        </div>
+      `).join("");
+
+    area.innerHTML += `
+      <div class="grupo">
+
+        <div class="titulo">
+          <span onclick="toggle('${idSeguro}')" style="cursor:pointer;">
+            🙏 ${grupo}
+          </span>
+
+          ${adminLogado ? `
+            <button class="del-btn"
+              onclick="if(confirm('Apagar grupo?')) removerGrupo('${grupo}')">
+              🗑️
+            </button>
+          ` : ""}
+        </div>
+
+        <div class="lista" id="${idSeguro}">
+          ${arquivos}
+        </div>
+
+      </div>
+    `;
+  }
+}
+
+/* REMOVER GRUPO */
+function removerGrupo(nome) {
+  delete dados[nome];
+  localStorage.setItem("dados", JSON.stringify(dados));
+  atualizar();
+}
+
+/* ADD */
+function add() {
+  const files = document.getElementById("file").files;
+  const grupo = document.getElementById("grupoSelect").value;
+
+  for (let file of files) {
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      dados[grupo].push({
+        nome: file.name,
+        url: e.target.result
+      });
+
+      localStorage.setItem("dados", JSON.stringify(dados));
+      atualizar();
+    };
+
+    reader.readAsDataURL(file);
+  }
+}
+
+/* CRIAR GRUPO */
+function criarGrupo() {
+  const nome = document.getElementById("novoGrupo").value;
+  if (!nome) return;
+
+  if (!dados[nome]) dados[nome] = [];
+
+  localStorage.setItem("dados", JSON.stringify(dados));
+  atualizar();
+}
+
+/* BUSCA */
+function buscar() {
+  const termo = document.getElementById("busca").value.toLowerCase();
+
+  document.querySelectorAll(".item").forEach(item => {
+    item.style.display = item.innerText.toLowerCase().includes(termo)
+      ? "flex"
+      : "none";
+  });
+}
+
+atualizar();
+
+</script>
+
+</body>
+</html>
